@@ -1,5 +1,6 @@
 package com.example.stepsapp.viewmodel
 
+import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,19 +28,25 @@ class MainScreenViewModel(private val healthConnectManager: HealthConnectManager
         requestedRecordState = requestedRecordDetails
     }
 
-    fun readDayRecords() {
+    fun readDayRecords(requestPermissions: ActivityResultLauncher<Set<String>>) {
+
         val startOfNextDay = requestedRecordState.selectedDay.plusDays(1)
         viewModelScope.launch {
-            _recordsUiState.update {
-                it.copy(recordsList = healthConnectManager
-                    .readRecords(requestedRecordState.selectedDay, startOfNextDay))
-            }
+            healthConnectManager.checkPermissionsAndRun(requestPermissions)
 
-            if (recordsUiState.value.recordsList.isNotEmpty()){
-                val total = healthConnectManager.getTotalSteps(requestedRecordState.selectedDay, startOfNextDay)
-                updateRequestedRecordState(requestedRecordState.copy(stepsOverall = total))
-            }
+            try{
+                _recordsUiState.update {
+                    it.copy(recordsList = healthConnectManager
+                        .readRecords(requestedRecordState.selectedDay, startOfNextDay))
+                }
 
+                if (recordsUiState.value.recordsList.isNotEmpty()){
+                    val total = healthConnectManager.getTotalSteps(requestedRecordState.selectedDay, startOfNextDay)
+                    updateRequestedRecordState(requestedRecordState.copy(stepsOverall = total))
+                }
+            } catch (securityException: SecurityException){
+                Log.d("d-error", "no permissions")
+            }
         }
     }
 
@@ -60,11 +67,11 @@ class MainScreenViewModel(private val healthConnectManager: HealthConnectManager
         }
     }
 
-    fun checkPermissions(requestPermissions: ActivityResultLauncher<Set<String>>) {
-        viewModelScope.launch {
-            healthConnectManager.checkPermissionsAndRun(requestPermissions)
-        }
-    }
+//    fun checkPermissions(requestPermissions: ActivityResultLauncher<Set<String>>) {
+//        viewModelScope.launch {
+//            healthConnectManager.checkPermissionsAndRun(requestPermissions)
+//        }
+//    }
 }
 
 data class RecordsUiState(val recordsList: List<StepsRecord> = listOf())

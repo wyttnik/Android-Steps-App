@@ -2,6 +2,7 @@ package com.example.stepsapp.ui.screens
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
+import android.util.Log
 import android.widget.DatePicker
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.clickable
@@ -88,8 +89,8 @@ fun HomeScreen(
         }
     }
 
-    viewModel.checkPermissions(requestPermissions)
-    viewModel.readDayRecords()
+//    viewModel.checkPermissions(requestPermissions)
+    viewModel.readDayRecords(requestPermissions)
 
     val recordsUiState by viewModel.recordsUiState.collectAsState()
 
@@ -281,6 +282,7 @@ private fun RecordsList(
 private fun RecordItem(item: StepsRecord, modifier: Modifier = Modifier,
                        deleteRecord: (ZonedDateTime, ZonedDateTime) -> Unit)
 {
+    Log.d("test-item", "${item.startZoneOffset} || ${item.count}")
     val startTime = ZonedDateTime.ofInstant(item.startTime, item.startZoneOffset)
     val endTime = ZonedDateTime.ofInstant(item.endTime, item.endZoneOffset)
     Card(
